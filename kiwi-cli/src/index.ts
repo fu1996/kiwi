@@ -31,7 +31,7 @@ function spining(text, callback) {
 }
 
 commander
-  .version('0.2.0')
+  .version('0.2.3')
   .option('--init', '初始化项目', { isDefault: true })
   .option('--import [file] [lang]', '导入翻译文案')
   .option('--export [file] [lang]', '导出未翻译的文案')
@@ -125,7 +125,7 @@ if (commander.translate) {
 }
 
 if (commander.extract) {
-  console.log(isString(commander.prefix));
+  console.log(isString(commander.prefix), commander.prefix);
   if (commander.prefix === true) {
     console.log('请指定翻译后文案 key 值的前缀 --prefix xxxx');
   } else if (isString(commander.prefix) && !new RegExp(/^I18N(\.[-_a-zA-Z1-9$]+)+$/).test(commander.prefix)) {

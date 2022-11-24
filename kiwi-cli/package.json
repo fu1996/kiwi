@@ -1,6 +1,6 @@
 {
-  "name": "kiwi-clis",
-  "version": "1.0.23",
+  "name": "@fu1996/kiwi-clis",
+  "version": "1.0.24",
   "description": "a cli for kiwi",
   "main": "dist/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "i18n"
   ],
   "bin": {
-    "kiwi": "dist/index.js"
+    "kiwif": "dist/index.js"
   },
   "author": "linhuiw",
   "license": "ISC",

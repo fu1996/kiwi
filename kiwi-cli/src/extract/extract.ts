@@ -40,6 +40,7 @@ function removeLangsFiles(files: string[]) {
  * 递归匹配项目中所有的代码的中文
  */
 function findAllChineseText(dir: string) {
+  console.log('findAllChineseText', dir);
   const first = dir.split(',')[0];
   let files = [];
   if (isDirectory(first)) {
@@ -49,11 +50,18 @@ function findAllChineseText(dir: string) {
     files = removeLangsFiles(dir.split(','));
   }
   const filterFiles = files.filter(file => {
-    return (isFile(file) && file.endsWith('.ts')) || file.endsWith('.tsx') || file.endsWith('.vue');
+    return (
+      (isFile(file) && (file.endsWith('.ts') || file.endsWith('.js'))) ||
+      file.endsWith('.tsx') ||
+      file.endsWith('.jsx') ||
+      file.endsWith('.vue')
+    );
   });
+  console.log('filterFiles', filterFiles);
   const allTexts = filterFiles.reduce((pre, file) => {
     const code = readFile(file);
     const texts = findChineseText(code, file);
+    console.log('查找到的文案如下', texts);
     // 调整文案顺序，保证从后面的文案往前替换，避免位置更新导致替换出错
     const sortTexts = _.sortBy(texts, obj => -obj.range.start);
     if (texts.length > 0) {
@@ -176,6 +184,7 @@ function getReplaceableStrs(currentFilename: string, langsPrefix: string, transl
  * @param {dirPath} 文件夹路径
  */
 function extractAll({ dirPath, prefix }: { dirPath?: string; prefix?: string }) {
+  console.log('dirPath', dirPath, prefix);
   const dir = dirPath || './';
   // 去除I18N
   const langsPrefix = prefix ? prefix.replace(/^I18N\./, '') : null;
@@ -275,7 +284,7 @@ function extractAll({ dirPath, prefix }: { dirPath?: string; prefix?: string }) 
         failInfo(e.message);
       });
   };
-
+  console.log('allTargetStrs', allTargetStrs);
   allTargetStrs
     .reduce((prev, current) => {
       return prev.then(() => {

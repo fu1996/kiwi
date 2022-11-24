@@ -6,6 +6,7 @@ import * as ts from 'typescript';
 import * as compiler from '@angular/compiler';
 import * as compilerVue from 'vue-template-compiler';
 import * as babel from '@babel/core';
+import * as parser from '@babel/parser';
 /** unicode cjk 中日韩文 范围 */
 const DOUBLE_BYTE_REGEX = /[\u4E00-\u9FFF]/g;
 
@@ -153,6 +154,116 @@ function findTextInTs(code: string, fileName: string) {
     ts.forEachChild(node, visit);
   }
   ts.forEachChild(ast, visit);
+
+  return matches;
+}
+
+/**
+ * 查找 Js 文件中的中文
+ * @param code
+ */
+function findTextInJs(code: string, filename: string) {
+  const matches = [];
+  console.log('findTextInJs', code, filename);
+  const findTextPlugin = () => ({
+    visitor: {
+      'StringLiteral|TemplateLiteral'(path) {
+        console.log('found text', path);
+      }
+    }
+  });
+  console.log('bable 解析开始');
+  const ast = parser.parse(code, {
+    sourceType: 'unambiguous',
+    plugins: ['jsx']
+  });
+  babel.transformFromAstSync(
+    ast,
+    {},
+    {
+      plugins: [findTextPlugin]
+    }
+  );
+  console.log('ast', ast);
+  // const ast = ts.createSourceFile('', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TSX);
+
+  // function visit(node: ts.Node) {
+  //   switch (node.kind) {
+  //     case ts.SyntaxKind.StringLiteral: {
+  //       /** 判断 Ts 中的字符串含有中文 */
+  //       const { text } = node as ts.StringLiteral;
+  //       if (text.match(DOUBLE_BYTE_REGEX)) {
+  //         const start = node.getStart();
+  //         const end = node.getEnd();
+  //         const range = { start, end };
+  //         matches.push({
+  //           range,
+  //           text,
+  //           isString: true
+  //         });
+  //       }
+  //       break;
+  //     }
+  //     case ts.SyntaxKind.JsxElement: {
+  //       const { children } = node as ts.JsxElement;
+
+  //       children.forEach(child => {
+  //         if (child.kind === ts.SyntaxKind.JsxText) {
+  //           const text = child.getText();
+  //           /** 修复注释含有中文的情况，Angular 文件错误的 Ast 情况 */
+  //           const noCommentText = removeFileComment(text, fileName);
+
+  //           if (noCommentText.match(DOUBLE_BYTE_REGEX)) {
+  //             const start = child.getStart();
+  //             const end = child.getEnd();
+  //             const range = { start, end };
+
+  //             matches.push({
+  //               range,
+  //               text: text.trim(),
+  //               isString: false
+  //             });
+  //           }
+  //         }
+  //       });
+  //       break;
+  //     }
+  //     case ts.SyntaxKind.TemplateExpression: {
+  //       const { pos, end } = node;
+  //       const templateContent = code.slice(pos, end);
+
+  //       if (templateContent.match(DOUBLE_BYTE_REGEX)) {
+  //         const start = node.getStart();
+  //         const end = node.getEnd();
+  //         const range = { start, end };
+  //         matches.push({
+  //           range,
+  //           text: code.slice(start + 1, end - 1),
+  //           isString: true
+  //         });
+  //       }
+  //       break;
+  //     }
+  //     case ts.SyntaxKind.NoSubstitutionTemplateLiteral: {
+  //       const { pos, end } = node;
+  //       const templateContent = code.slice(pos, end);
+
+  //       if (templateContent.match(DOUBLE_BYTE_REGEX)) {
+  //         const start = node.getStart();
+  //         const end = node.getEnd();
+  //         const range = { start, end };
+  //         matches.push({
+  //           range,
+  //           text: code.slice(start + 1, end - 1),
+  //           isString: true
+  //         });
+  //       }
+  //     }
+  //   }
+
+  //   ts.forEachChild(node, visit);
+  // }
+  // ts.forEachChild(ast, visit);
 
   return matches;
 }
@@ -409,10 +520,13 @@ function findVueText(ast) {
  * @param code
  */
 function findChineseText(code: string, fileName: string) {
+  console.log('findChineseText', fileName);
   if (fileName.endsWith('.html')) {
     return findTextInHtml(code);
   } else if (fileName.endsWith('.vue')) {
     return findTextInVue(code);
+    // } else if (fileName.endsWith('.js') || fileName.endsWith('.jsx')) {
+    //   return findTextInJs(code, fileName);
   } else {
     return findTextInTs(code, fileName);
   }
